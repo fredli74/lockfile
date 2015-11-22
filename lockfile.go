@@ -8,7 +8,6 @@
 //		} else {
 //			defer lock.Unlock()
 //		}
-
 package lockfile
 
 import (
@@ -22,6 +21,9 @@ type LockFile struct {
 	file *os.File
 }
 
+// Lock automatically checks if the file already exists, if so, reads the process ID
+// from the file and checks if the process is running. If the process is running a nil
+// lock is returned and an error stating "Locked by other process".
 func Lock(name string) (*LockFile, error) {
 	var err error
 
@@ -49,6 +51,7 @@ func Lock(name string) (*LockFile, error) {
 	}
 }
 
+// Unlock closes and deletes the lock file previously created by Lock()
 func (l *LockFile) Unlock() {
 	l.file.Close()
 	os.Remove(l.name)
