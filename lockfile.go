@@ -1,0 +1,55 @@
+// Copyright 2015 Fredrik Lidström. All rights reserved.
+// Use of this source code is governed by the standard MIT License (MIT)
+// that can be found in the LICENSE file.
+
+// Package lockfile implements a simple automatic lockfile (PID) method.
+//		if lock, err := lockfile.Lock(filename); err != nil {
+//			panic(err)
+//		} else {
+//			defer lock.Unlock()
+//		}
+
+package lockfile
+
+import (
+	"errors"
+	"fmt"
+	"os"
+)
+
+type LockFile struct {
+	name string
+	file *os.File
+}
+
+func Lock(name string) (*LockFile, error) {
+	var err error
+
+	lock := LockFile{name: name}
+
+	if lock.file, err = os.OpenFile(lock.name, os.O_CREATE|os.O_RDWR, os.ModeTemporary|0640); err == nil {
+		var pid int
+		if _, err = fmt.Fscanf(lock.file, "%d\n", &pid); err == nil {
+			if pid != os.Getpid() {
+				if ProcessRunning(pid) {
+					return nil, errors.New("Locked by other process")
+				}
+			}
+		}
+
+		lock.file.Seek(0, 0)
+		if n, err := fmt.Fprintf(lock.file, "%d\n", os.Getpid()); err == nil {
+			lock.file.Truncate(int64(n))
+			return &lock, nil
+		} else {
+			return nil, err
+		}
+	} else {
+		return nil, err
+	}
+}
+
+func (l *LockFile) Unlock() {
+	l.file.Close()
+	os.Remove(l.name)
+}
