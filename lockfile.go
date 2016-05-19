@@ -2,7 +2,7 @@
 // Use of this source code is governed by the standard MIT License (MIT)
 // that can be found in the LICENSE file.
 
-// Package lockfile implements a simple automatic lockfile (PID) method.
+// Package lockfile implements a simple automatic lockfile (PID) method for golang.
 //		if lock, err := lockfile.Lock(filename); err != nil {
 //			panic(err)
 //		} else {
