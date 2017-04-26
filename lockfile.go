@@ -16,6 +16,8 @@ import (
 	"os"
 )
 
+var AlreadyLocked = errors.New("Locked by other process")
+
 type LockFile struct {
 	name string
 	file *os.File
@@ -34,7 +36,7 @@ func Lock(name string) (*LockFile, error) {
 		if _, err = fmt.Fscanf(lock.file, "%d\n", &pid); err == nil {
 			if pid != os.Getpid() {
 				if ProcessRunning(pid) {
-					return nil, errors.New("Locked by other process")
+					return nil, AlreadyLocked
 				}
 			}
 		}
